@@ -1,0 +1,45 @@
+archetype fa2_bridge
+
+asset token identified by token_id {
+  token_id     : nat;
+  total_supply : nat = 0;
+}
+
+asset ledger identified by owner_token {
+  owner      : address;
+  token_id   : nat;
+  balance    : nat = 0;
+}
+
+variable admin : address = @tz1RelayerAddress
+
+entry mint(user : address, amount : nat, token_id : nat) {
+  called by admin
+  effect {
+    if not token.contains(token_id) then
+      token.add({ token_id = token_id; total_supply = amount })
+    else
+      token.update(token_id, { total_supply += amount });
+    end;
+
+    if not ledger.contains((user, token_id)) then
+      ledger.add({ owner = user; token_id = token_id; balance = amount })
+    else
+      ledger.update((user, token_id), { balance += amount });
+    end;
+
+    emit<Mint>(user, amount, token_id)
+  }
+}
+
+entry burn(user : address, amount : nat, token_id : nat) {
+  called by admin
+  require {
+    r1: ledger[(user, token_id)].balance >= amount otherwise "Insufficient balance"
+  }
+  effect {
+    ledger.update((user, token_id), { balance -= amount });
+    token.update(token_id, { total_supply -= amount });
+    emit<Burn>(user, amount, token_id)
+  }
+}
