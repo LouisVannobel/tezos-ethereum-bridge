@@ -16,6 +16,8 @@
 
 # Dependency directories (remove the comment below to include it)
 # vendor/
+node_modules/
+.truffle/
 
 # Go workspace file
 go.work
@@ -24,7 +26,4 @@ go.work.sum
 # env file
 .env
 
-node_modules/
-.truffle/
 build/
-
